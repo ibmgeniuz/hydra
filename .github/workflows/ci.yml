@@ -1,40 +1,85 @@
 name: CI
 
+# Merge is blocked unless every gate below is green. The load-bearing one is the
+# ESLint module-boundary check (step 3): it is the machine-readable IP/provenance
+# gate. Biome owns format/lint/caps (step 2); ESLint runs ONLY enforce-module-boundaries.
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
 
 permissions:
-  actions: read
   contents: read
 
 jobs:
-  main:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          filter: tree:0
+          # Full history so `nx affected` has a base and commitlint can read the range.
           fetch-depth: 0
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      - uses: pnpm/action-setup@v4 # version comes from package.json "packageManager"
 
-      # Cache node_modules
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version-file: .nvmrc
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
-      # Prepend any command with "nx record --" to record its logs to Nx Cloud
-      - run: npx nx record -- npx nx format:check  --base="remotes/origin/main"
-      - run: npx nx run-many -t lint test build typecheck e2e-ci
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
+      # Sets NX_BASE / NX_HEAD for `nx affected`; selects all projects on first run.
+      - uses: nrwl/nx-set-shas@v4
+
+      # Fail fast if TypeScript project references drift from the import graph.
+      - name: TS project references in sync
+        run: pnpm exec nx sync:check
+
+      # 1. Build (affected)
+      - name: Build
+        run: pnpm exec nx affected -t build
+
+      # 2. Biome — format + lint + complexity/size caps, repo-wide.
+      - name: Biome check
+        run: pnpm exec biome check .
+
+      # 3. ESLint module-boundary check — THE IP/provenance gate (affected).
+      #    Runs ONLY @nx/enforce-module-boundaries (see eslint.config.mjs).
+      - name: Module boundaries
+        run: pnpm exec nx affected -t lint
+
+      # 4. Strict typecheck (tsc --noEmit via the typecheck target; strict: true).
+      - name: Typecheck
+        run: pnpm exec nx affected -t typecheck
+
+      # 5. Test + coverage. Calibrated for Phase 0: --passWithNoTests lets empty shells
+      #    pass; coverage is collected/reported but no numeric threshold is enforced
+      #    yet (raised on changed code from the next logic-bearing slice). Present & green.
+      - name: Test + coverage
+        run: pnpm exec nx affected -t test --coverage --passWithNoTests
+
+      # 6. Every project carries an ip: and host: tag.
+      - name: Tag-presence check
+        run: node tools/check-project-tags.mjs
+
+      # 7. Hard max-lines-per-file cap (per-function caps are Biome's job, step 2).
+      - name: File-length check
+        run: node tools/check-file-length.mjs
+
+      # 8. Commit lint (Conventional Commits) over the PR's commit range.
+      - name: Commit lint
+        if: github.event_name == 'pull_request'
+        run: >-
+          pnpm exec commitlint
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.sha }}
+          --verbose
+
+      # 9. OpenAPI contract check — STUB. Wired for real in the API slice, where it will
+      #    assert the generated client stays in sync AND that no crown-jewel field or
+      #    endpoint leaks into the public spec. Intentionally a no-op pass in Phase 0.
+      - name: OpenAPI contract check (stub)
+        run: |
+          echo "STUB: OpenAPI contract check — client-sync + no crown-jewel leak."
+          echo "Wired in the API slice. No spec exists in Phase 0, so this passes."

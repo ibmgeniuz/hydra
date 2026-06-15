@@ -1,0 +1,14 @@
+# Local pre-commit speed layer. CI (.github/workflows/ci.yml) is the authoritative
+# gate; these hooks only catch the obvious before a commit exists, so keep them fast.
+pre-commit:
+  parallel: true
+  jobs:
+    # Biome autofix (format + safe lint) on staged files only, via lint-staged.
+    - name: biome
+      run: pnpm exec lint-staged
+
+commit-msg:
+  jobs:
+    # Conventional Commits — same rule set CI re-checks.
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}

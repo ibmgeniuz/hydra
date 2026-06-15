@@ -1,18 +1,69 @@
 {
-  "name": "@org/source",
+  "name": "@hydra/source",
   "version": "0.0.0",
-  "license": "MIT",
-  "scripts": {},
+  "license": "UNLICENSED",
   "private": true,
-  "dependencies": {},
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=24.13.0"
+  },
+  "scripts": {
+    "build": "nx run-many -t build",
+    "typecheck": "nx run-many -t typecheck",
+    "test": "nx run-many -t test --passWithNoTests",
+    "lint:boundaries": "nx run-many -t lint",
+    "biome:check": "biome check .",
+    "biome:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "tags:check": "node tools/check-project-tags.mjs",
+    "filelen:check": "node tools/check-file-length.mjs",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "prepare": "lefthook install"
+  },
   "devDependencies": {
+    "@biomejs/biome": "2.5.0",
+    "@changesets/cli": "2.31.0",
+    "@commitlint/cli": "21.0.2",
+    "@commitlint/config-conventional": "21.0.2",
+    "@nx/devkit": "22.7.5",
+    "@nx/esbuild": "22.7.5",
+    "@nx/eslint": "22.7.5",
+    "@nx/eslint-plugin": "22.7.5",
     "@nx/js": "22.7.5",
+    "@nx/next": "22.7.5",
+    "@nx/node": "22.7.5",
+    "@nx/vite": "22.7.5",
+    "@nx/vitest": "22.7.5",
     "@swc-node/register": "1.11.1",
+    "@swc/cli": "~0.8.0",
     "@swc/core": "1.15.8",
     "@swc/helpers": "0.5.18",
+    "@types/node": "20.19.9",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vitest/coverage-v8": "~4.1.0",
+    "esbuild": "^0.27.0",
+    "eslint": "9.39.4",
+    "jsonc-eslint-parser": "^2.4.0",
+    "lefthook": "2.1.9",
+    "lint-staged": "17.0.7",
     "nx": "22.7.5",
-    "prettier": "^3.8.1",
-    "tslib": "^2.3.0",
-    "typescript": "~5.9.2"
+    "tslib": "catalog:",
+    "typescript": "~5.9.2",
+    "vite": "^8.0.0",
+    "vitest": "~4.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@swc/core",
+      "esbuild",
+      "lefthook",
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }
