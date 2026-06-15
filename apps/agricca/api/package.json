@@ -1,0 +1,111 @@
+{
+  "name": "@hydra/agricca-api",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "agricca-api",
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "apps/agricca/api/dist",
+          "format": [
+            "cjs"
+          ],
+          "bundle": false,
+          "main": "apps/agricca/api/src/main.ts",
+          "tsConfig": "apps/agricca/api/tsconfig.app.json",
+          "assets": [
+            "apps/agricca/api/src/assets"
+          ],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      },
+      "prune-lockfile": {
+        "dependsOn": [
+          "build"
+        ],
+        "cache": true,
+        "executor": "@nx/js:prune-lockfile",
+        "outputs": [
+          "{workspaceRoot}/apps/agricca/api/dist/package.json",
+          "{workspaceRoot}/apps/agricca/api/dist/pnpm-lock.yaml"
+        ],
+        "options": {
+          "buildTarget": "build"
+        }
+      },
+      "copy-workspace-modules": {
+        "dependsOn": [
+          "build"
+        ],
+        "cache": true,
+        "outputs": [
+          "{workspaceRoot}/apps/agricca/api/dist/workspace_modules"
+        ],
+        "executor": "@nx/js:copy-workspace-modules",
+        "options": {
+          "buildTarget": "build"
+        }
+      },
+      "prune": {
+        "dependsOn": [
+          "prune-lockfile",
+          "copy-workspace-modules"
+        ],
+        "executor": "nx:noop"
+      },
+      "serve": {
+        "continuous": true,
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "agricca-api:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "agricca-api:build:development"
+          },
+          "production": {
+            "buildTarget": "agricca-api:build:production"
+          }
+        }
+      }
+    },
+    "tags": [
+      "ip:opco-agricca",
+      "scope:opco",
+      "host:server",
+      "type:app"
+    ]
+  },
+  "dependencies": {
+    "@hydra/financial-engine": "workspace:*",
+    "@hydra/agricca-core": "workspace:*"
+  }
+}

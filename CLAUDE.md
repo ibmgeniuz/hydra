@@ -1,23 +1,47 @@
-<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
+# CLAUDE.md — HYDRA product repo
 
-# General Guidelines for working with Nx
+HYDRA is a licensable TypeScript marketplace **platform**. Each marketplace product is
+an OpCo ("head") built on the shared platform. This repo is an **Nx monorepo**; the
+strategy/IP/corporate docs live in a separate planning workspace, **not here**.
 
-- For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
-- You have access to the Nx MCP server and its tools, use them to help the user
-- For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
-- NEVER guess CLI flags - always check nx_docs or `--help` first when unsure
+## The one rule that everything else depends on
 
-## Scaffolding & Generators
+**Provenance and host boundaries are enforced in CI, not by convention.** Every project
+carries an `ip:` (provenance) and `host:` tag, and `@nx/enforce-module-boundaries`
+fails the build on a crossing import:
 
-- For scaffolding tasks (creating apps, libs, project structure, setup), ALWAYS invoke the `nx-generate` skill FIRST before exploring or calling MCP tools
+- `libs/shared/*` (shared platform IP) MUST NOT import `libs/opco/*`.
+- No OpCo may import another OpCo. OpCo code is always a snippable leaf.
+- `host:client` projects MUST NOT reach `host:server` internals (only the SDK / shared UI).
 
-## When to use nx_docs
+The matrix lives in `eslint.config.mjs`. If you add a project, give it all four tag
+dimensions (`ip:`, `scope:`, `host:`, `type:`) or CI's tag-presence check fails.
 
-- USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
-- DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
-- The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
+## Toolchain — who owns what
 
-<!-- nx configuration end-->
+- **Biome** (`biome.jsonc`) owns ALL formatting, linting, and complexity/size caps.
+- **ESLint** (`eslint.config.mjs`) is retained for **exactly one rule**:
+  `@nx/enforce-module-boundaries`. It loads no style rules — the two never overlap.
+- **`tools/check-file-length.mjs`** adds the per-file line cap Biome has no rule for.
+- TypeScript is `strict`. Vitest runs tests. Changesets versions shared libs.
+
+Run `pnpm biome:fix` before committing (Lefthook does this on staged files automatically).
+
+## Code quality
+
+Mechanical caps are enforced by the tools above. The **judgment** rubric
+(single-responsibility, comment _why_ not _what_, no premature abstraction,
+prose-economy) lives in the `code-quality` skill (`.claude/skills/code-quality/`) —
+currently a placeholder, authored in a later slice. Design rationale goes in the
+PR/commit body, **not** in code comments.
+
+## Layout
+
+```
+apps/<opco>/<app>     thin deployable shells (a thin OpCo composition API + storefront)
+apps/platform/*       shared reference API + the control plane
+libs/shared/*         shared platform IP (publishable @hydra/* packages)
+libs/opco/<name>/*    OpCo-specific leaves (private; snippable)
+```
+
+See `CONTRIBUTING.md` for the workflow (trunk-based) and the flags-vs-entitlements rule.

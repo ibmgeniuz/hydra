@@ -1,0 +1,54 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  // Biome owns ALL formatting, linting, and complexity/size caps for HYDRA. The only
+  // thing it does NOT do is module-boundary enforcement — that single concern lives in
+  // the retained boundary-only ESLint config (eslint.config.mjs), which Biome and this
+  // file deliberately do not overlap with.
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/out-tsc",
+      "!**/.next",
+      "!**/.nx",
+      "!**/coverage",
+      "!**/node_modules",
+      "!**/*.d.ts",
+      "!pnpm-lock.yaml"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      // The mechanical "is this slop?" caps. A hard max-lines-per-FILE has no Biome
+      // rule; that gap is covered by tools/check-file-length.mjs in CI.
+      "complexity": {
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": { "maxAllowedComplexity": 15 }
+        },
+        "noExcessiveLinesPerFunction": {
+          "level": "error",
+          "options": { "maxLines": 80, "skipBlankLines": true }
+        }
+      }
+    }
+  }
+}

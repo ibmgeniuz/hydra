@@ -1,2 +1,19 @@
 packages:
-  - 'packages/*'
+  - 'apps/*/*'
+  - 'libs/shared/*'
+  - 'libs/opco/*/*'
+
+# Single source of truth for external dependency versions. Projects reference these
+# with `catalog:` instead of pinning literal ranges, so a version exists in exactly
+# one place. Floors verified against the npm registry (2026-06-14):
+#   - react / react-dom: Expo SDK 56 bundles React 19.2 (its binding floor); Next 16's
+#     peer is the looser ^19.0.0. ^19.2.0 satisfies both and resolves to 19.2.7.
+#   - next: 16.2.9 is the latest stable 16.x; @nx/next declares next only as a peer
+#     (>=14 <17), so this is the only `next` in the graph (single version).
+catalog:
+  '@types/react': ^19.2.0
+  '@types/react-dom': ^19.2.0
+  next: ~16.2.9
+  react: ^19.2.0
+  react-dom: ^19.2.0
+  tslib: ^2.8.1

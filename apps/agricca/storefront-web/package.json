@@ -1,0 +1,19 @@
+{
+  "name": "@hydra/agricca-storefront-web",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "agricca-storefront-web",
+    "tags": [
+      "ip:opco-agricca",
+      "scope:opco",
+      "host:client",
+      "type:app"
+    ]
+  },
+  "dependencies": {
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}
