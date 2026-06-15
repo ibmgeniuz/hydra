@@ -35,6 +35,11 @@ prose-economy) lives in the `code-quality` skill (`.claude/skills/code-quality/`
 currently a placeholder, authored in a later slice. Design rationale goes in the
 PR/commit body, **not** in code comments.
 
+## Commit & PR hygiene
+
+Do not add `Co-Authored-By` or any Claude/Anthropic attribution to commit messages or
+PR descriptions. `.claude/settings.json` pins `includeCoAuthoredBy: false`.
+
 ## Layout
 
 ```
